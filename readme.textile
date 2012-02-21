@@ -2,7 +2,7 @@ h1. node-builder
 
 h2. Install
 
-<pre><code>$ npm install builder -g</code></pre>
+<pre><code>$ npm install mvc-builder -g</code></pre>
 
 h2. Creating a New Project
 

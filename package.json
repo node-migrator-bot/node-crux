@@ -1,6 +1,6 @@
 {
   "author": "James Brumond <kbjr14@gmail.com> (http://jbrumond.me)",
-  "name": "builder",
+  "name": "mvc-builder",
   "description": "An MVC web application framework controller",
   "version": "0.0.0",
   "repository": {
