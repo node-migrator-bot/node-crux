@@ -1,0 +1,15 @@
+h1. node-builder
+
+h2. Install
+
+<pre><code>$ npm install builder -g</code></pre>
+
+h2. Creating a New Project
+
+<pre><code>$ builder init [directory]</code></pre>
+
+h2. Using Migrations
+
+<pre><code>$ builder migrate [...]</code></pre>
+
+_(See "node-migrate":https://github.com/visionmedia/node-migrate for exact use of migration commands)_
