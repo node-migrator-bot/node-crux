@@ -46,15 +46,46 @@ exports.run = function(args, projectPath) {
 	 */
 
 	var template = [
+		'',
+		'// Load the database model',
+		'var db = $.models.require(\'db\');',
+		'',
+		'// ------------------------------------------------------------------',
+		'//  UP',
+		'',
+		'exports.up = function(next) {',
+		'	var dbconn = db.open();',
+		'	dbconn.runTransaction(function(commit, rollback) {',
+		'',
+		'		// XXX ...',
+		'',
+		'		commit(function(err) {',
+		'			db.close(dbconn);',
+		'			if (err) {throw err;}',
+		'			next();',
+		'		});',
+		'',
+		'	});',
+		'};',
+		'',
+		'// ------------------------------------------------------------------',
+		'//  DOWN',
+		'',
+		'exports.down = function(next) {',
+		'	var dbconn = db.open();',
+		'	dbconn.runTransaction(function(commit, rollback) {',
+		'',
+		'		// XXX ...',
+		'',
+		'		commit(function(err) {',
+		'			db.close(dbconn);',
+		'			if (err) {throw err;}',
+		'			next();',
+		'		});',
+		'',
+		'	});',
+		'};',
 		''
-	  , 'exports.up = function(next) {'
-	  , '	next();'
-	  , '};'
-	  , ''
-	  , 'exports.down = function(next) {'
-	  , '	next();'
-	  , '};'
-	  , ''
 	].join('\n');
 
 	// require an argument
@@ -226,11 +257,11 @@ exports.run = function(args, projectPath) {
 	  set[direction](null, migrationPath);
 	}
 
-	// invoke command
-
 	// Load the core
 	global._coreOnly_ = true;
 	require(join(projectPath, 'core/init'));
+
+	// invoke command
 
 	var command = options.command || 'up';
 	if (!(command in commands)) abort('unknown command "' + command + '"');
