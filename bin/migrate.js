@@ -1,5 +1,5 @@
 // A modified version of the migrate command for progmatic use
-exports.run = function(args) {
+exports.run = function(args, projectPath) {
 
 	/**
 	 * Module dependencies.
@@ -230,7 +230,7 @@ exports.run = function(args) {
 
 	// Load the core
 	global._coreOnly_ = true;
-	require('../core/init');
+	require(join(projectPath, 'core/init'));
 
 	var command = options.command || 'up';
 	if (!(command in commands)) abort('unknown command "' + command + '"');

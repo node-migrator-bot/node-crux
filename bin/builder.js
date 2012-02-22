@@ -35,7 +35,7 @@ switch (args.shift()) {
 			return fs.statSync(file).isDirectory();
 		});
 		process.chdir(PROJECT_PATH);
-		require('./migrate').run(args);
+		require('./migrate').run(args, PROJECT_PATH);
 	break;
 	
 	// builder [...]
