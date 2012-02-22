@@ -34,7 +34,8 @@ switch (args.shift()) {
 		var PROJECT_PATH = findUpTree(process.cwd(), 'migrations', function(file) {
 			return fs.statSync(file).isDirectory();
 		});
-		var migrate = require('child_process').spawn(MIGRATE_PATH, args, { cwd: PROJECT_PATH });
+		process.chdir(PROJECT_PATH);
+		require('./migrate').run(args);
 	break;
 	
 	// builder [...]
