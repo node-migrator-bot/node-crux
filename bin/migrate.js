@@ -8,6 +8,12 @@ exports.run = function(args, projectPath) {
 	var migrate = require('../node_modules/migrate')
 	  , join = require('path').join
 	  , fs = require('fs');
+	
+	/**
+	 * File with the template.
+	 */
+	
+	var TEMPLATE_FILE = '.template';
 
 	/**
 	 * Option defaults.
@@ -44,46 +50,23 @@ exports.run = function(args, projectPath) {
 	/**
 	 * Migration template.
 	 */
-
+	
+	var _template = fs.readFileSync(join('migrations', TEMPLATE_FILE)).toString();
 	var template = [
 		'',
 		'// Load the database model',
 		'var db = $.models.require(\'db\');',
 		'',
 		'// ------------------------------------------------------------------',
-		'//  UP',
 		'',
 		'exports.up = function(next) {',
-		'	var dbconn = db.open();',
-		'	dbconn.runTransaction(function(commit, rollback) {',
-		'',
-		'		// XXX ...',
-		'',
-		'		commit(function(err) {',
-		'			db.close(dbconn);',
-		'			if (err) {throw err;}',
-		'			next();',
-		'		});',
-		'',
-		'	});',
+		'	' + _template.split('\n').join('\n\t'),
 		'};',
 		'',
 		'// ------------------------------------------------------------------',
-		'//  DOWN',
 		'',
 		'exports.down = function(next) {',
-		'	var dbconn = db.open();',
-		'	dbconn.runTransaction(function(commit, rollback) {',
-		'',
-		'		// XXX ...',
-		'',
-		'		commit(function(err) {',
-		'			db.close(dbconn);',
-		'			if (err) {throw err;}',
-		'			next();',
-		'		});',
-		'',
-		'	});',
+		'	' + _template.split('\n').join('\n\t'),
 		'};',
 		''
 	].join('\n');
@@ -200,8 +183,44 @@ exports.run = function(args, projectPath) {
 		  , title = slugify([].slice.call(arguments).join(' '));
 		title = title ? curr + '-' + title : curr; 
 		create(title);
+	  },
+	  
+	  /**
+	   * edit-template [editor]
+	   */
+	  
+	  "edit-template": function(editor) {
+		editor = editor || 'vi';
+		var file = join('migrations', TEMPLATE_FILE);
+		spawnEditor(editor, file);
 	  }
+	  
 	};
+	
+	function spawnEditor(editor, file) {
+	  var tty = require('tty');
+	  var proc = require('child_process').spawn('/usr/bin/env', [editor, file]);
+
+	  function indata(c) {
+		proc.stdin.write(c);
+	  }
+	  function outdata(c) {
+		process.stdout.write(c);
+	  }
+
+	  process.stdin.resume();
+	  process.stdin.on('data', indata);
+	  proc.stdout.on('data', outdata);
+	  tty.setRawMode(true);
+
+	  proc.on('exit', function(code) {
+		tty.setRawMode(false);
+		process.stdin.pause();
+		process.stdin.removeListener('data', indata);
+		proc.stdout.removeListener('data', outdata);
+		process.exit(0);
+	  });
+	}
 
 	/**
 	 * Pad the given number.
