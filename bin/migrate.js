@@ -19,7 +19,7 @@ exports.run = function(args, projectPath) {
 	 * Option defaults.
 	 */
 
-	var options = { args: [] };
+	var options = { args: [], verbose: false };
 
 	/**
 	 * Current working directory.
@@ -55,7 +55,7 @@ exports.run = function(args, projectPath) {
 	var template = [
 		'',
 		'// Load the database model',
-		'var db = $.models.require(\'db\');',
+		'var db = $.libs.require(\'db\');',
 		'',
 		'// ------------------------------------------------------------------',
 		'',
@@ -101,6 +101,10 @@ exports.run = function(args, projectPath) {
 		case '--chdir':
 		  process.chdir(cwd = required());
 		  break;
+		case '-v':
+		case '--verbose':
+		  options.verbose = true;
+		break;
 		default:
 		  if (options.command) {
 		    options.args.push(arg);
@@ -278,6 +282,7 @@ exports.run = function(args, projectPath) {
 
 	// Load the core
 	global._coreOnly_ = true;
+	global._forceVerbose_ = options.verbose;
 	require(join(projectPath, 'core/init'));
 
 	// invoke command
