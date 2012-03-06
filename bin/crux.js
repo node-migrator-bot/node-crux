@@ -35,31 +35,9 @@ switch (args.shift()) {
 		process.chdir(projectPath);
 		var quiet = (args[0] && args[0] === '--quiet');
 		var init = path.join(projectPath, 'core/init.js');
-		var proc = require('child_process').spawn('/usr/bin/env', ['node', init]);
 		var logFile = path.join(projectPath, 'logs/access.log');
-		logFile = fs.createWriteStream(logFile, {
-			flags: 'a',
-			mode: 0666,
-			encoding: 'utf8'
-		});
-		var logger = (
-			quiet ? function(toLog) {
-				logFile.write(toLog);
-			} : function(toLog) {
-				logFile.write(toLog);
-				console.log(String(toLog).trimRight());
-			}
-		);
-		proc.stdout.on('data', logger);
-		proc.stderr.on('data', logger);
-		proc.on('exit', function() {
-			logFile.end();
-			logFile.destroySoon();
-			process.exit();
-		});
-		process.on('SIGINT', function() {
+		runProcess('/usr/bin/env', ['node', init], quiet, logFile, function() {
 			console.log('Stopping Server');
-			proc.kill();
 		});
 	break;
 	
@@ -73,11 +51,60 @@ switch (args.shift()) {
 		require('./migrate').run(args, projectPath);
 	break;
 	
+	// builder npm [...]
+	case 'npm':
+		var projectPath = findUpTree(process.cwd(), 'core/init.js');
+		process.chdir(projectPath);
+		var quiet =!! (args[0] && args[0] === '--quiet' && args.shift());
+		args.unshift('npm');
+		runProcess('/usr/bin/env', args, quiet);
+	break;
+	
 	// builder [...]
 	default:
 		console.log('Invalid use');
 	break;
 	
+}
+
+function runProcess(cmd, args, quiet, logFile, onkill) {
+	var proc = require('child_process').spawn(cmd, args);
+	var toLogFile;
+	if (logFile) {
+		logFile = fs.createWriteStream(logFile, {
+			flags: 'a',
+			mode: 0666,
+			encoding: 'utf8'
+		});
+		toLogFile = function(toLog) {
+			logFile.write(toLog);
+		};
+	} else {
+		toLogFile = function() { };
+	}
+	var logger = (
+		quiet ? function(toLog) {
+			toLogFile(toLog);
+		} : function(toLog) {
+			toLogFile(toLog);
+			console.log(String(toLog).trimRight());
+		}
+	);
+	proc.stdout.on('data', logger);
+	proc.stderr.on('data', logger);
+	proc.on('exit', function() {
+		if (logFile) {
+			logFile.end();
+			logFile.destroySoon();
+		}
+		process.exit();
+	});
+	process.on('SIGINT', function() {
+		if (typeof onkill === 'function') {
+			onkill();
+		}
+		proc.kill();
+	});
 }
 
 // Find the first directory up the tree which contains a matching file
