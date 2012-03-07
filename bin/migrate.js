@@ -54,7 +54,7 @@ exports.run = function(args, projectPath) {
 	var _template = fs.readFileSync(join('migrations', TEMPLATE_FILE)).toString();
 	var template = [
 		'',
-		'// Load the database model',
+		'// Load the database library',
 		'var db = $.libs.require(\'db\');',
 		'',
 		'// ------------------------------------------------------------------',
