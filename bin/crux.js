@@ -9,7 +9,8 @@ var BASE_PATH      = path.join(__dirname, '..');
 var TEMPLATE_PATH  = path.join(BASE_PATH, 'template');
 var PID_FILE       = '.server-pid';
 var PATCH_REMOTE   = '__crux_patch';
-var GITHUB_REPO    = 'git@github.com:kbjr/node-crux';
+var GITHUB_REPO    = 'git@github.com:kbjr/node-crux-template';
+var CONFLIT_ERROR  = 'after resolving the conflicts, mark the corrected paths';
 
 var args = process.argv.slice(2);
 
@@ -62,7 +63,7 @@ switch (args.shift()) {
 		runProcess('/usr/bin/env', args, quiet);
 	break;
 	
-	// crux patch <commit-ish>
+	// crux patch [--quiet] <commit-ish>
 	case 'patch':
 		changeDirectoryToProjectPath();
 		var quiet =!! (args[0] && args[0] === '--quiet' && args.shift());
@@ -76,7 +77,7 @@ switch (args.shift()) {
 			
 			// If the repo did not already exist, make sure we commit all the files
 			if (autoCreated) {
-				repo.add('*', throws(function() {
+				repo.run('add * -f', throws(function() {
 					repo.commit('foo', throws(function() {
 						afterOpen();
 					}));
@@ -101,25 +102,21 @@ switch (args.shift()) {
 					console.log('> Fetching patch data from repository...');
 				}
 				repo.run('fetch ?', [PATCH_REMOTE], throws(function() {
-					repo.run('cherry-pick ?', [args.join(' ')], throws(function() {
+					repo.run('cherry-pick ?', [args.join(' ')], function(err, stdout, stderr) {
 						
-						// If we created the repo, we can now destroy it
-						if (autoCreated) {
-							var _git = path.join(process.cwd(), '.git';
-							wrench.rmdirRecursive(_git, throws(done));
-						} else {
-							done();
+						// Check if there were conflits
+						if (err && err.code === 1 && String(stderr).indexOf(CONFLIT_ERROR) >= 0) {
+							console.log('! There were conflicts when merging the patch(es).');
+							console.log('! You can use `git status` to see what files have unresolved conflicts.');
 						}
 						
-						function done() {
-							console.log('> Patching complete');
-						}
+						console.log('> Patching complete');
 						
-					}));
+					});
 				}));
 			}
 			
-		});
+		}));
 	break;
 	
 	// crux [...]
