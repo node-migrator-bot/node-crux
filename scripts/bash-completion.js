@@ -44,7 +44,7 @@ function fail() {
 	console.error([
 		'Could not install bash completion. If your system supports this feature, it may',
 		'be a permissions error (are you using sudo?). You can try installing the bash',
-		'completion scripts later using `[sudo] npm run-script install crux`.'
+		'completion scripts later using `[sudo] npm run-script crux install -g`.'
 	].join('\n'));
 	process.exit(0);
 }

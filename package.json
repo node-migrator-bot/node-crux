@@ -12,7 +12,8 @@
     "crux": "./bin/crux.js"
   },
   "scripts": {
-    "install": "scripts/install.js"
+    "install": "node scripts/bash-completion.js",
+    "update": "node scripts/bash-completion.js"
   },
   "engines": {
     "node": ">=0.6.0"
