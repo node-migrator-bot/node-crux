@@ -6,9 +6,9 @@ _crux()
 	sub="${COMP_WORDS[1]}"
 
 	# Complete sub-commands
-	if [ "$COMP_CWORD" == "1" ]
+	if [ "$COMP_CWORD" == "1" ] || [ "$COMP_CWORD" == "2" -a "$sub" == "help" ]
 	then
-		subcommands="init start migrate npm patch"
+		subcommands="init start migrate npm patch help"
 		COMPREPLY=( $(compgen -W "$subcommands" -- ${cur}) )
 		return 0
 	# Complete migration subcommands

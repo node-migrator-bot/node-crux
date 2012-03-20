@@ -119,9 +119,89 @@ switch (args.shift()) {
 		}));
 	break;
 	
+	// crux help [command]
+	case 'help':
+		switch (args.shift()) {
+			case 'init':
+				console.log([
+					'',
+					'usage: crux init [directory]',
+					'',
+					'Creates a new Crux project. If a directory is given, the project will be',
+					'created there. If not, the project will be created in the current directory.',
+					''
+				].join('\n'));
+			break;
+			case 'start':
+				console.log([
+					'',
+					'usage: crux start [--quiet]',
+					'',
+					'Starts the application server. If the --quiet flag is given, no output will',
+					'be sent to stdout or stderr.',
+					''
+				].join('\n'));
+			break;
+			case 'migrate':
+				console.log([
+					'',
+					'usage:',
+					'  crux migrate create [name]',
+					'  crux migrate [up|down] [to]',
+					'',
+					'Manages migrations. Using `migrate create` will create a new migration (optionally',
+					'with a given name). The `migrate up` and `migrate down` commands run migrations. If',
+					'a [to] value is given, migrations will be run up to and including the given migration',
+					'file. Otherwise, all migrations (except those already run) will be run. If no',
+					'[up|down] value is given, it will migrate all the way up.',
+					''
+				].join('\n'));
+			break;
+			case 'npm':
+				console.log([
+					'',
+					'usage: crux npm [args]',
+					'',
+					'Runs a npm command on the current project. See `npm help` for more information on npm',
+					'commands available.',
+					''
+				].join('\n'));
+			break;
+			case 'patch':
+				console.log([
+					'',
+					'usage: crux patch [--quiet] <commit-ish>',
+					'',
+					'Patch the current project with commits from the Crux source code repository. Most commonly',
+					'used for patching fixed bugs.',
+					''
+				].join('\n'));
+			break;
+			case undefined:
+				console.log([
+					'',
+					'usage: crux <command> [args]',
+					'',
+					'Commands:',
+					'  init       Create a new Crux project',
+					'  start      Start the application server',
+					'  migrate    Manage migrations',
+					'  npm        Run npm commands',
+					'  patch      Patch your project',
+					'',
+					'Use `crux help <command>` for help on a specific command',
+					''
+				].join('\n'));
+			break;
+			default:
+				console.log('No such command. See `crux help` for a list of commands.');
+			break;
+		}
+	break;
+	
 	// crux [...]
 	default:
-		console.log('Invalid use');
+		console.log('Invalid use. See `crux help` for usage.');
 	break;
 	
 }
