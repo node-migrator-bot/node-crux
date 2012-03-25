@@ -358,8 +358,10 @@ function initProject(templateFlag, args, callback) {
 						throw 'Could not apply template "' + template + '"; Template not found.';
 					}
 					git.open(creationPath, throws(function(repo) {
-						repo.run('apply ?', [templatePatch], throws(function() {
-							callback(creationPath);
+						repo.checkout('master', throws(function() {
+							repo.run('apply ?', [templatePatch], throws(function() {
+								callback(creationPath);
+							}));
 						}));
 					}));
 				});
