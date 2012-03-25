@@ -17,8 +17,7 @@ path.exists(BASH_COMPLETION, function(exists) {
 			if (err) {fail();}
 			if (stats.isDirectory()) {
 				
-				// Copy the completion script
-				copyFile(COMPLETION, path.join(BASH_COMPLETION, 'crux'), function(err) {
+				fs.symlink(COMPLETION, path.join(BASH_COMPLETION, 'crux'), function(err) {
 					if (err) {fail();}
 				});
 				
@@ -28,16 +27,6 @@ path.exists(BASH_COMPLETION, function(exists) {
 });
 
 // --------------------------------------------------------
-
-// Copy a file (as node has no built-in copy function)
-function copyFile(from, to, callback) {
-	fs.readFile(from, function(err, data) {
-		if (err) {return callback(err);}
-		fs.writeFile(to, data, function(err) {
-			callback(err);
-		});
-	});
-}
 
 // Fail with a standard error message
 function fail() {
@@ -49,4 +38,4 @@ function fail() {
 	process.exit(0);
 }
 
-// End of file install.js
+/* End of file bash-completion.js */

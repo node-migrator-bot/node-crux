@@ -5,32 +5,27 @@ var path    = require('path');
 var git     = require('gitjs');
 var wrench  = require('wrench');
 
-var BASE_PATH      = path.join(__dirname, '..');
-var TEMPLATE_PATH  = path.join(BASE_PATH, 'template');
-var PID_FILE       = '.server-pid';
-var PATCH_REMOTE   = '__crux_patch';
-var GITHUB_REPO    = 'git@github.com:kbjr/node-crux-template';
-var CONFLIT_ERROR  = 'after resolving the conflicts, mark the corrected paths';
+var BASE_PATH         = path.join(__dirname, '..');
+var TEMPLATE_PATH     = path.join(BASE_PATH, 'template');
+var TEMPLATES_DIR     = path.join(BASE_PATH, 'templates');
+var PID_FILE          = '.server-pid';
+var PATCH_REMOTE      = '__crux_patch';
+var TEMPLATE_BRANCH   = '__crux_template';
+var GITHUB_REPO       = 'git@github.com:kbjr/node-crux-template';
+var CONFLIT_ERROR     = 'after resolving the conflicts, mark the corrected paths';
 
 var args = process.argv.slice(2);
 
 switch (args.shift()) {
 	
-	// crux init [directory]
+	// crux basepath
+	case 'basepath':
+		console.log(BASE_PATH);
+	break;
+	
+	// crux init [--template <template>] [directory]
 	case 'init':
-		var creationPath = path.join(process.cwd(), (args[0] || '.'));
-		// Make sure the template exists
-		path.exists(TEMPLATE_PATH, function(exists) {
-			if (! exists) {
-				throw 'Template path not found';
-			}
-			// Copy the template to the new location
-			wrench.copyDirSyncRecursive(TEMPLATE_PATH, creationPath, function(err) {
-				if (err) {
-					throw err;
-				}
-			});
-		});
+		initProject('--template', args);
 	break;
 	
 	// crux start [--quiet]
@@ -118,32 +113,125 @@ switch (args.shift()) {
 			
 		}));
 	break;
+
+	// crux template [...]
+	case 'template':
+		switch (args.shift()) {
+	
+			// crux template create [--from <from>] <directory>
+			case 'create':
+				initProject('--from', args, function(projectPath) {
+					// Create and checkout a new branch for building the template
+					git.open(projectPath, throws(function(repo) {
+						repo.createBranch(TEMPLATE_BRANCH, throws(function() {
+							repo.checkout(TEMPLATE_BRANCH, throws());
+						}));
+					}));
+				});
+			break;
+	
+			// crux template build
+			case 'build':
+				changeDirectoryToProjectPath();
+				var templateName = path.basename(process.cwd());
+				// Prepare the repository
+				git.open('.', throws(function(repo) {
+					repo.add('*', throws(function() {
+						repo.commit('crux-template: ' + templateName, throws(function() {
+							// Create the patch file
+							repo.run('format-patch master --stdout', throws(function(stdout) {
+								fs.writeFile(templateName, stdout, throws());
+							}));
+						}));
+					}));
+				}));
+			break;
+	
+			// crux template install [--name <name>] <source>
+			case 'install':
+				var name, source;
+				if (args[0] === '--name') {
+					name = (args.shift(), args.shift());
+				}
+				source = args.shift();
+				if (! source) {
+					console.error('Invalid usage.');
+					process.exit(1);
+				}
+				name = name || path.basename(source);
+				// Make sure the source file exists
+				path.exists(source, function(exists) {
+					if (! exists) {
+						console.error('Source file does not exist.');
+						process.exit(1);
+					}
+					// Make sure the source file is a regular file
+					fs.stat(source, throws(function(stats) {
+						if (! stats.isFile()) {
+							console.error('Source file is not a regular file');
+							process.exit(1);
+						}
+						// Copy the template patch file into the templates directory
+						copyFile(source, path.join(TEMPLATES_DIR, name), throws());
+					}));
+				});
+			break;
+	
+			// crux template uninstall <name>
+			case 'uninstall':
+				var name = args[0];
+				if (! name) {
+					console.error('Invalid usage.');
+					process.exit(1);
+				}
+				var templateFile = path.join(TEMPLATES_DIR, name);
+				path.exists(templateFile, function(exists) {
+					if (! exists) {
+						console.error('Template does not exist.');
+						process.exit(1);
+					}
+					fs.unlink(templateFile, throws());
+				});
+			break;
+			
+			default:
+				console.error('Invalid usage.\nSee `crux help template` for help.');
+			break;
+	
+		}
+	break;
+
+// ------------------------------------------------------------------
+//  Help
 	
 	// crux help [command]
 	case 'help':
+		var msg;
 		switch (args.shift()) {
 			case 'init':
-				console.log([
+				msg = [
 					'',
-					'usage: crux init [directory]',
+					'usage: crux init [--template <template>] [directory]',
 					'',
 					'Creates a new Crux project. If a directory is given, the project will be',
 					'created there. If not, the project will be created in the current directory.',
+					'If a template value is given, that is the project template that will be used',
+					'to create the new project. The default project template is called "default".',
 					''
-				].join('\n'));
+				];
 			break;
 			case 'start':
-				console.log([
+				msg = [
 					'',
 					'usage: crux start [--quiet]',
 					'',
 					'Starts the application server. If the --quiet flag is given, no output will',
 					'be sent to stdout or stderr.',
 					''
-				].join('\n'));
+				];
 			break;
 			case 'migrate':
-				console.log([
+				msg = [
 					'',
 					'usage:',
 					'  crux migrate create [name]',
@@ -155,30 +243,49 @@ switch (args.shift()) {
 					'file. Otherwise, all migrations (except those already run) will be run. If no',
 					'[up|down] value is given, it will migrate all the way up.',
 					''
-				].join('\n'));
+				];
 			break;
 			case 'npm':
-				console.log([
+				msg = [
 					'',
 					'usage: crux npm [args]',
 					'',
-					'Runs a npm command on the current project. See `npm help` for more information on npm',
-					'commands available.',
+					'Runs a npm command on the current project. See `npm help` for more',
+					'information on npm commands available.',
 					''
-				].join('\n'));
+				];
+			break;
+			case 'template':
+				msg = [
+					'',
+					'usage:',
+					'  crux template create [--from <from>] <directory>',
+					'  crux template build',
+					'  crux template install [--name <name>] <source>',
+					'  crux template uninstall <name>',
+					'',
+					'Manages project templates.',
+					'',
+					'  create      initializes a new template directory',
+					'  build       builds a new project template file',
+					'  install     installs the given template file (optionally under a given name)',
+					'  uninstall   uninstalls the given template',
+					'',
+					''
+				];
 			break;
 			case 'patch':
-				console.log([
+				msg = [
 					'',
 					'usage: crux patch [--quiet] <commit-ish>',
 					'',
 					'Patch the current project with commits from the Crux source code repository. Most commonly',
 					'used for patching fixed bugs.',
 					''
-				].join('\n'));
+				];
 			break;
 			case undefined:
-				console.log([
+				msg = [
 					'',
 					'usage: crux <command> [args]',
 					'',
@@ -187,16 +294,18 @@ switch (args.shift()) {
 					'  start      Start the application server',
 					'  migrate    Manage migrations',
 					'  npm        Run npm commands',
+					'  template   Manage project templates',
 					'  patch      Patch your project',
 					'',
 					'Use `crux help <command>` for help on a specific command',
 					''
-				].join('\n'));
+				];
 			break;
 			default:
-				console.log('No such command. See `crux help` for a list of commands.');
+				msg = [ 'No such command. See `crux help` for a list of commands.' ];
 			break;
 		}
+		console.log(msg.join('\n'));
 	break;
 	
 	// crux [...]
@@ -218,6 +327,58 @@ function throws(callback) {
 			return callback.apply(this, args);
 		}
 	}
+}
+
+// Initialize a new project
+function initProject(templateFlag, args, callback) {
+	var template = null;
+	var creationPath = '.';
+	callback = callback || function() { };
+	// Read args
+	if (args[0] === templateFlag) {
+		template = (args.shift(), args.shift());
+	}
+	if (args.length) {
+		creationPath = args.shift();
+	}
+	// Normalize args
+	creationPath = path.resolve(creationPath);
+	// Make sure the base template exists
+	path.exists(TEMPLATE_PATH, function(exists) {
+		if (! exists) {
+			throw 'Template path not found';
+		}
+		// Copy the template to the new location
+		wrench.copyDirSyncRecursive(TEMPLATE_PATH, creationPath, function(err) {
+			if (err) {
+				throw err;
+			}
+			// Apply any template patch needed
+			if (template) {
+				var templatePatch = path.join(TEMPLATES_DIR, template);
+				path.exists(templatePatch, function(exists) {
+					if (! exists) {
+						throw 'Could not apply template "' + template + '"; Template not found.';
+					}
+					git.open(creationPath, throws(function(repo) {
+						repo.run('apply ?', [templatePatch], throws(function() {
+							callback(creationPath);
+						}));
+					}));
+				});
+			} else {
+				callback(creationPath);
+			}
+		});
+	});
+}
+
+// Copy a simple file
+function copyFile(from, to, callback) {
+	fs.readFile(from, function(err, data) {
+		if (err) {return callback(err);}
+		fs.writeFile(to, data, callback);
+	});
 }
 
 // Change to the directory at the project root
