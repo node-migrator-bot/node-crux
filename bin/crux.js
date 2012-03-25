@@ -349,10 +349,7 @@ function initProject(templateFlag, args, callback) {
 			throw 'Template path not found';
 		}
 		// Copy the template to the new location
-		wrench.copyDirRecursive(TEMPLATE_PATH, creationPath, function(err) {
-			if (err) {
-				throw err;
-			}
+		copyIntoRecursive(TEMPLATE_PATH, creationPath, throws(function() {
 			// Apply any template patch needed
 			if (template) {
 				var templatePatch = path.join(TEMPLATES_DIR, template);
@@ -369,7 +366,7 @@ function initProject(templateFlag, args, callback) {
 			} else {
 				callback(creationPath);
 			}
-		});
+		}));
 	});
 }
 
@@ -378,6 +375,43 @@ function copyFile(from, to, callback) {
 	fs.readFile(from, function(err, data) {
 		if (err) {return callback(err);}
 		fs.writeFile(to, data, callback);
+	});
+}
+
+// Check if a file is a directory
+function isDir(file, callback) {
+	fs.stat(file, function(err, stats) {
+		callback(! err && stats.isDirectory());
+	});
+}
+
+// Copy files recursively from one directory into another without
+// clobbering the original directory (conflicting sub-directories
+// will still be clobbered).
+function copyIntoRecursive(from, to, callback) {
+	path.exists(to, function(exists) {
+		if (! exists) {
+			return wrench.copyDirRecursive(from, to, callback);
+		}
+		fs.readdir(from, throws(function(files) {
+			var completed = [ ];
+			function done() {
+				completed.push(null);
+				if (completed.length === files.length) {
+					callback();
+				}
+			}
+			files.forEach(function(file) {
+				var fromFile = path.join(from, file);
+				isDir(fromFile, function(isDir) {
+					if (isDir) {
+						wrench.copyDirRecursive(fromFile, path.join(to, file), throws(done));
+					} else {
+						copyFile(fromFile, path.join(to, file), throws(done));
+					}
+				});
+			});
+		}));
 	});
 }
 
