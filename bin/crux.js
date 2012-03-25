@@ -259,7 +259,7 @@ switch (args.shift()) {
 				msg = [
 					'',
 					'usage:',
-					'  crux template create [--from <from>] <directory>',
+					'  crux template create [--from <from>] [<directory>]',
 					'  crux template build',
 					'  crux template install [--name <name>] <source>',
 					'  crux template uninstall <name>',
@@ -349,7 +349,7 @@ function initProject(templateFlag, args, callback) {
 			throw 'Template path not found';
 		}
 		// Copy the template to the new location
-		wrench.copyDirSyncRecursive(TEMPLATE_PATH, creationPath, function(err) {
+		wrench.copyDirRecursive(TEMPLATE_PATH, creationPath, function(err) {
 			if (err) {
 				throw err;
 			}
