@@ -1,15 +1,3 @@
 h1. node-crux
 
-h2. Install
-
-<pre><code>$ npm install crux -g</code></pre>
-
-h2. Creating a New Project
-
-<pre><code>$ crux init [directory]</code></pre>
-
-h2. Using Migrations
-
-<pre><code>$ crux migrate [...]</code></pre>
-
-_(See "node-migrate":https://github.com/visionmedia/node-migrate for exact use of migration commands)_
+See "cruxjs.com":http://cruxjs.com for details on installation and usage.
