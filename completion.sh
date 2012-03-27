@@ -52,6 +52,10 @@ _crux ()
 								if [ "$prev" == "uninstall" ]; then
 									templates="$(_crux_find_module_directory)/templates";
 									COMPREPLY=($(compgen -W "$(for x in "$templates/*"; do echo $(basename $x); done)" -- ${cur}));
+									return 0;
+								elif [ "$prev" == "install" ]; then
+									COMPREPLY=($(compgen -f ${cur}));
+									return 0;
 								fi;
 							fi;
 						fi;
