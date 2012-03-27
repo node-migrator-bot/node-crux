@@ -17,8 +17,14 @@ path.exists(BASH_COMPLETION, function(exists) {
 			if (err) {fail();}
 			if (stats.isDirectory()) {
 				
-				fs.symlink(COMPLETION, path.join(BASH_COMPLETION, 'crux'), function(err) {
-					if (err) {fail();}
+				var cruxCompletion = path.join(BASH_COMPLETION, 'crux');
+				
+				path.exists(cruxCompletion, function(exists) {
+					if (! exists) {
+						fs.symlink(COMPLETION, cruxCompletion, function(err) {
+							if (err) {fail();}
+						});
+					}
 				});
 				
 			}
