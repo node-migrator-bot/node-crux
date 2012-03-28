@@ -334,9 +334,10 @@ function throws(callback) {
 // This is not necessary, so in the event of an error, just continue on quietly
 //
 function upToDate(callback) {
-	var cwd = process.cwd();
-	process.chdir(path.join(BASE_PATH, '../..'));
-	require('child_process').exec('npm', ['outdated', 'crux'], function(err, stdout, stderr) {
+	var opts = {
+		cwd: path.join(BASE_PATH, '../..')
+	};
+	require('child_process').exec('npm outdated crux', opts, function(err, stdout, stderr) {
 		if (err) {return callback(true);}
 		var info = null;
 		var list = String(stdout).split('\n').forEach(function(item) {
