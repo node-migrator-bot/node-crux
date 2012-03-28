@@ -136,7 +136,7 @@ switch (args.shift()) {
 				var templateName = path.basename(process.cwd());
 				// Prepare the repository
 				git.open('.', throws(function(repo) {
-					repo.add('*', throws(function() {
+					repo.add('.', throws(function() {
 						repo.commit('crux-template: ' + templateName, throws(function() {
 							// Create the patch file
 							repo.run('format-patch master --stdout', throws(function(stdout) {
@@ -329,46 +329,147 @@ function throws(callback) {
 	}
 }
 
+// Checks that Crux is up to date
+//
+// This is not necessary, so in the event of an error, just continue on quietly
+//
+function upToDate(callback) {
+	var cwd = process.cwd();
+	process.chdir(path.join(BASE_PATH, '../..'));
+	require('child_process').exec('npm', ['outdated', 'crux'], function(err, stdout, stderr) {
+		if (err) {return callback(true);}
+		var info = null;
+		var list = String(stdout).split('\n').forEach(function(item) {
+			item = item.split(' ');
+			if (item[1] === './node_modules/crux') {
+				info = {
+					recent: item[0].split('@')[1],
+					current: item[2].split('=')[1]
+				};
+			}
+		});
+		callback(! info, info);
+	});
+}
+
+// Ask a question and take an answer on stdin
+function ask(question, format, callback) {
+	var stdin = process.stdin;
+	var stdout = process.stdout;
+
+	stdin.resume();
+	stdout.write(question + ": ");
+
+	stdin.once('data', function(data) {
+		data = data.toString().trim();
+
+		if (format.test(data)) {
+			callback(data);
+		} else {
+			stdout.write('I could not understand your response\n');
+			process.exit(1);
+		}
+	});
+}
+
 // Initialize a new project
 function initProject(templateFlag, args, callback) {
-	var template = null;
-	var creationPath = '.';
+	args = parseInitArgs(templateFlag, args);
+	if (args.skipUpdate) {
+		return done();
+	}
+	// Check that Crux is up to date
+	upToDate(function(isUpToDate, update) {
+		if (isUpToDate) {
+			return done();
+		}
+		var question =
+			'Your current version of Crux is not up to date (current: ' +
+			 update.current + ', update: ' + update.recent + ').\n' +
+			'Would you like to update your version of Crux before continuing? [y/n/A(bort)]';
+		ask(question, /^[yna]/i, function(response) {
+			switch (response[0].toLowerCase()) {
+				case 'y':
+					doUpdate(done);
+				break;
+				case 'n':
+					done();
+				break;
+				case 'a':
+					console.log('Aborted.');
+					process.exit(0);
+				break;
+			}
+		});
+	});
+	function done() {
+		doInit(args, callback);
+	}
+}
+
+// Parse the arguments for an init command (init/template create)
+function parseInitArgs(templateFlag, args) {
+	var result = {
+		template: null,
+		creationPath: '.',
+		skipUpdate: false
+	};
+	var current;
+	while (args.length) {
+		switch (current = args.shift()) {
+			case templateFlag:
+				result.template = args.shift();
+			break;
+			case '--skip-update-check':
+				result.skipUpdate = true;
+			break;
+			default:
+				result.creationPath = current;
+			break;
+		}
+	}
+	result.creationPath = path.resolve(result.creationPath);
+	return result;
+}
+
+// Do the actual project init
+function doInit(args, callback) {
 	callback = callback || function() { };
-	// Read args
-	if (args[0] === templateFlag) {
-		template = (args.shift(), args.shift());
-	}
-	if (args.length) {
-		creationPath = args.shift();
-	}
-	// Normalize args
-	creationPath = path.resolve(creationPath);
 	// Make sure the base template exists
 	path.exists(TEMPLATE_PATH, function(exists) {
 		if (! exists) {
 			throw 'Template path not found';
 		}
 		// Copy the template to the new location
-		copyIntoRecursive(TEMPLATE_PATH, creationPath, throws(function() {
+		copyIntoRecursive(TEMPLATE_PATH, args.creationPath, throws(function() {
 			// Apply any template patch needed
-			if (template) {
-				var templatePatch = path.join(TEMPLATES_DIR, template);
+			if (args.template) {
+				var templatePatch = path.join(TEMPLATES_DIR, args.template);
 				path.exists(templatePatch, function(exists) {
 					if (! exists) {
-						throw 'Could not apply template "' + template + '"; Template not found.';
+						throw 'Could not apply template "' + args.template + '"; Template not found.';
 					}
-					git.open(creationPath, throws(function(repo) {
+					git.open(args.creationPath, throws(function(repo) {
 						repo.checkout('master', throws(function() {
 							repo.run('apply ?', [templatePatch], throws(function() {
-								callback(creationPath);
+								callback(args.creationPath);
 							}));
 						}));
 					}));
 				});
 			} else {
-				callback(creationPath);
+				callback(args.creationPath);
 			}
 		}));
+	});
+}
+
+// Update Crux
+function doUpdate(callback) {
+	console.log('> Updating Crux...');
+	runProcess('npm', ['update', 'crux', '-g'], false, null, null, function() {
+		console.log('> Update complete. Continuing...');
+		callback();
 	});
 }
 
@@ -425,7 +526,7 @@ function changeDirectoryToProjectPath() {
 }
 
 // Run a child process
-function runProcess(cmd, args, quiet, logFile, onkill) {
+function runProcess(cmd, args, quiet, logFile, onkill, callback) {
 	var proc = require('child_process').spawn(cmd, args);
 	var toLogFile;
 	if (logFile) {
@@ -454,6 +555,9 @@ function runProcess(cmd, args, quiet, logFile, onkill) {
 		if (logFile) {
 			logFile.end();
 			logFile.destroySoon();
+		}
+		if (typeof callback === 'function') {
+			callback();
 		}
 		process.exit();
 	});
