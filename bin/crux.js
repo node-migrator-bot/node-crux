@@ -200,6 +200,21 @@ switch (args.shift()) {
 	
 		}
 	break;
+	
+	// crux update [--check-only]
+	case 'update':
+		if (args.shift() === '--check-only') {
+			upToDate(function(isUpToDate, update) {
+				if (! isUpToDate) {
+					console.log(update.recent + '>' + update.current);
+				}
+			});
+		} else {
+			doUpdate(function() {
+				// pass
+			});
+		}
+	break;
 
 // ------------------------------------------------------------------
 //  Help
@@ -211,7 +226,7 @@ switch (args.shift()) {
 			case 'init':
 				msg = [
 					'',
-					'usage: crux init [--template <template>] [directory]',
+					'usage: crux init [--template <template>] [--skip-update-check] [directory]',
 					'',
 					'Creates a new Crux project. If a directory is given, the project will be',
 					'created there. If not, the project will be created in the current directory.',
@@ -259,7 +274,7 @@ switch (args.shift()) {
 				msg = [
 					'',
 					'usage:',
-					'  crux template create [--from <from>] [<directory>]',
+					'  crux template create [--from <from>] [--skip-update-check] [<directory>]',
 					'  crux template build',
 					'  crux template install [--name <name>] <source>',
 					'  crux template uninstall <name>',
@@ -281,6 +296,16 @@ switch (args.shift()) {
 					'',
 					'Patch the current project with commits from the Crux source code repository. Most commonly',
 					'used for patching fixed bugs.',
+					''
+				];
+			break;
+			case 'update':
+				msg = [
+					'',
+					'usage: crux update [--check-only]',
+					'',
+					'Update your version of Crux to the latest version. If the --check-only flag is given, the',
+					'command will only check to see if there is an updated version, not actaully do an update.',
 					''
 				];
 			break;
@@ -391,7 +416,10 @@ function initProject(templateFlag, args, callback) {
 		ask(question, /^[yna]/i, function(response) {
 			switch (response[0].toLowerCase()) {
 				case 'y':
-					doUpdate(done);
+					doUpdate(function() {
+						console.log('> Update complete. Continuing...');
+						done();
+					});
 				break;
 				case 'n':
 					done();
@@ -468,10 +496,7 @@ function doInit(args, callback) {
 // Update Crux
 function doUpdate(callback) {
 	console.log('> Updating Crux...');
-	runProcess('npm', ['update', 'crux', '-g'], false, null, null, function() {
-		console.log('> Update complete. Continuing...');
-		callback();
-	});
+	runProcess('npm', ['update', 'crux', '-g'], false, null, null, callback);
 }
 
 // Copy a simple file

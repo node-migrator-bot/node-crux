@@ -2,7 +2,7 @@
   "author": "James Brumond <kbjr14@gmail.com> (http://jbrumond.me)",
   "name": "crux",
   "description": "An MVC web application framework controller",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "preferGlobal": "true",
   "files": ["*", "template/.git*"],
   "repository": {
