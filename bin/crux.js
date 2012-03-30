@@ -321,6 +321,7 @@ switch (args.shift()) {
 					'  npm        Run npm commands',
 					'  template   Manage project templates',
 					'  patch      Patch your project',
+					'  update     Update/check for update to Crux',
 					'',
 					'Use `crux help <command>` for help on a specific command',
 					''
