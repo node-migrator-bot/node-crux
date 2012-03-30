@@ -5,7 +5,7 @@ _crux ()
 	prev="${COMP_WORDS[$COMP_CWORD - 1]}";
 	sub="${COMP_WORDS[1]}";
 	if [ "$COMP_CWORD" == "1" ] || [ "$COMP_CWORD" == "2" -a "$sub" == "help" ]; then
-		subcommands="init start migrate npm patch template help";
+		subcommands="init start migrate npm patch template help update";
 		COMPREPLY=($(compgen -W "$subcommands" -- ${cur}));
 		return 0;
 	else
