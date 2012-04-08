@@ -55,7 +55,7 @@ exports.run = function(args, projectPath) {
 	var template = [
 		'',
 		'// Load the database library',
-		'var db = $.libs.require(\'db\');',
+		'var db = $.libs.require(\'sqldb\');',
 		'',
 		'// ------------------------------------------------------------------',
 		'',
