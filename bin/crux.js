@@ -18,6 +18,12 @@ var args = process.argv.slice(2);
 
 switch (args.shift()) {
 	
+	// crux --version
+	case '--version':
+		console.log(require('../package.json').version);
+		process.exit(0);
+	break;
+	
 	// crux basepath
 	case 'basepath':
 		console.log(BASE_PATH);
