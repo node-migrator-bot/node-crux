@@ -34,7 +34,7 @@ switch (args.shift()) {
 		initProject('--template', args);
 	break;
 	
-	// crux start [--quiet]
+	// crux start [--quiet] [--environment <environment>]
 	case 'start':
 		var projectPath = findUpTree(process.cwd(), 'core/init.js');
 		process.chdir(projectPath);
@@ -244,10 +244,11 @@ switch (args.shift()) {
 			case 'start':
 				msg = [
 					'',
-					'usage: crux start [--quiet]',
+					'usage: crux start [--quiet] [--environment <environment>]',
 					'',
 					'Starts the application server. If the --quiet flag is given, no output will',
-					'be sent to stdout or stderr.',
+					'be sent to stdout or stderr. The environment option can be given to control',
+					'the running environment (eg. "production" vs. "development").',
 					''
 				];
 			break;
