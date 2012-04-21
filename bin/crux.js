@@ -472,7 +472,7 @@ function parseInitArgs(templateFlag, args) {
 function parseStartArgs(args) {
 	var result = {
 		quiet: false,
-		environment: 'development'
+		environment: 'production'
 	};
 	while (args.length) {
 		switch (args.shift()) {
