@@ -38,10 +38,10 @@ switch (args.shift()) {
 	case 'start':
 		var projectPath = findUpTree(process.cwd(), 'core/init.js');
 		process.chdir(projectPath);
-		var quiet = (args[0] && args[0] === '--quiet');
+		var opts = parseStartArgs(args);
 		var init = path.join(projectPath, 'core/init.js');
 		var logFile = path.join(projectPath, 'logs/access.log');
-		runProcess('/usr/bin/env', ['node', init], quiet, logFile, function() {
+		runProcess('/usr/bin/env', ['node', init, opts.environment], opts.quiet, logFile, function() {
 			console.log('Stopping Server');
 		});
 	break;
@@ -465,6 +465,25 @@ function parseInitArgs(templateFlag, args) {
 		}
 	}
 	result.creationPath = path.resolve(result.creationPath);
+	return result;
+}
+
+// Parse options for `crux start`
+function parseStartArgs(args) {
+	var result = {
+		quiet: false,
+		environment: 'development'
+	};
+	while (args.length) {
+		switch (args.shift()) {
+			case '--quiet':
+				result.quiet = true;
+			break;
+			case '--environment':
+				result.environment = args.shift();
+			break;
+		}
+	}
 	return result;
 }
 
