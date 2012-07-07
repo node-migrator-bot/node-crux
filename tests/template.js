@@ -9,7 +9,7 @@ var testing  = require('./testing');
 var TEMP = path.join(__dirname, 'temp');
 
 // Make sure temp doesn't already exist
-path.exists(TEMP, function(exists) {
+fs.exists(TEMP, function(exists) {
 	if (exists) {
 		destroyTemp(run);
 	} else {

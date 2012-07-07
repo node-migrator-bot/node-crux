@@ -166,7 +166,7 @@ switch (args.shift()) {
 				}
 				name = name || path.basename(source);
 				// Make sure the source file exists
-				path.exists(source, function(exists) {
+				fs.exists(source, function(exists) {
 					if (! exists) {
 						console.error('Source file does not exist.');
 						process.exit(1);
@@ -191,7 +191,7 @@ switch (args.shift()) {
 					process.exit(1);
 				}
 				var templateFile = path.join(TEMPLATES_DIR, name);
-				path.exists(templateFile, function(exists) {
+				fs.exists(templateFile, function(exists) {
 					if (! exists) {
 						console.error('Template does not exist.');
 						process.exit(1);
@@ -492,7 +492,7 @@ function parseStartArgs(args) {
 function doInit(args, callback) {
 	callback = callback || function() { };
 	// Make sure the base template exists
-	path.exists(TEMPLATE_PATH, function(exists) {
+	fs.exists(TEMPLATE_PATH, function(exists) {
 		if (! exists) {
 			throw 'Template path not found';
 		}
@@ -501,7 +501,7 @@ function doInit(args, callback) {
 			// Apply any template patch needed
 			if (args.template) {
 				var templatePatch = path.join(TEMPLATES_DIR, args.template);
-				path.exists(templatePatch, function(exists) {
+				fs.exists(templatePatch, function(exists) {
 					if (! exists) {
 						throw 'Could not apply template "' + args.template + '"; Template not found.';
 					}
@@ -545,7 +545,7 @@ function isDir(file, callback) {
 // clobbering the original directory (conflicting sub-directories
 // will still be clobbered).
 function copyIntoRecursive(from, to, callback) {
-	path.exists(to, function(exists) {
+	fs.exists(to, function(exists) {
 		if (! exists) {
 			return wrench.copyDirRecursive(from, to, callback);
 		}
