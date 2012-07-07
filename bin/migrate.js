@@ -215,10 +215,10 @@ exports.run = function(args, projectPath) {
 	  process.stdin.resume();
 	  process.stdin.on('data', indata);
 	  proc.stdout.on('data', outdata);
-	  tty.setRawMode(true);
+	  process.stdin.setRawMode(true);
 
 	  proc.on('exit', function(code) {
-		tty.setRawMode(false);
+		process.stdin.setRawMode(false);
 		process.stdin.pause();
 		process.stdin.removeListener('data', indata);
 		proc.stdout.removeListener('data', outdata);
