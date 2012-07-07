@@ -628,7 +628,7 @@ function findUpTree(findIn, find, otherTest) {
 		? otherTest
 		: function() { return true; };
 	var file = path.join(findIn, find);
-	if (path.existsSync(file) && otherTest(file)) {
+	if (fs.existsSync(file) && otherTest(file)) {
 		return findIn;
 	} else {
 		var next = path.join(findIn, '..');
